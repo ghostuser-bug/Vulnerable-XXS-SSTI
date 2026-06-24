@@ -1,297 +1,315 @@
-```
 # Vulnerable Flask Web Application Demo
 
-> ⚠️ **Educational purpose only**  
-> This project intentionally contains web security vulnerabilities for learning and testing in a controlled environment.
+> ⚠️ **Educational Use Only**
+>
+> This project intentionally contains multiple web application security vulnerabilities for learning, security research, and penetration testing practice. **Do not deploy this application to production or expose it to the public internet.**
 
 ## Overview
 
-This is a deliberately vulnerable Flask web application designed to demonstrate common web security issues such as:
+This Flask application demonstrates common web security vulnerabilities, including:
 
-- Server-Side Template Injection (SSTI)
-- Cross-Site Scripting (XSS)
-- Unsafe template rendering
-- Potential Remote Code Execution through template injection
+* Server-Side Template Injection (SSTI)
+* Cross-Site Scripting (XSS)
+* Potential Remote Code Execution (RCE) through SSTI exploitation
 
-The goal of this project is to help students, beginners, and security learners understand how insecure coding patterns can introduce serious vulnerabilities in web applications.
+The application is designed as a safe learning environment for security professionals, students, bug bounty hunters, and developers who want to understand how these vulnerabilities work and how they can be mitigated.
 
-## Important Warning
-
-**Do not deploy this application to a public server.**
-
-This application is intentionally insecure. Running it on the public internet may expose your server, files, environment variables, and system resources to attackers.
-
-Use this project only in:
-
-- Localhost environments
-- Private labs
-- Virtual machines
-- CTF-style practice environments
-- Isolated cloud instances with strict firewall rules
+---
 
 ## Features
 
-- Simple Flask web interface
-- User input form
-- Intentionally vulnerable template rendering
-- Demonstrates reflected XSS
-- Demonstrates SSTI behavior
-- Includes educational warnings and vulnerability descriptions
+### Vulnerable Components
 
-## Technologies Used
+#### 1. Server-Side Template Injection (SSTI)
 
-- Python
-- Flask
-- HTML
-- CSS
-- Jinja2 templates
+User input is directly injected into a Jinja2 template and rendered using:
 
-## Project Structure
-
+```python
+render_template_string(...)
 ```
 
-.
+Example payload:
 
-├── [app.py](http://app.py)
-
-├── requirements.txt
-
-└── [README.md](http://README.md)
-
-```
-
-## Installation
-
-### 1. Clone the repository
-
-```
-
-git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
-
-cd YOUR-REPOSITORY
-
-```
-
-### 2. Create a virtual environment
-
-```
-
-python3 -m venv venv
-
-```
-
-### 3. Activate the virtual environment
-
-#### Linux / macOS
-
-```
-
-source venv/bin/activate
-
-```
-
-#### Windows
-
-```
-
-venvScriptsactivate
-
-```
-
-### 4. Install dependencies
-
-```
-
-pip install -r requirements.txt
-
-```
-
-If you do not have a `requirements.txt` file yet, create one with:
-
-```
-
-Flask
-
-```
-
-## Running the Application
-
-```
-
-python [app.py](http://app.py)
-
-```
-
-By default, the application runs on:
-
-```
-
-http://127.0.0.1:5000
-
-```
-
-If the app is configured to bind to all interfaces:
-
-```
-
-[app.run](http://app.run)(host="0.0.0.0", port=5000, debug=True)
-
-```
-
-then it may also be accessible from other devices on the same network.
-
-Again, **do not expose this app publicly**.
-
-## Example Test Payloads
-
-### Basic SSTI Test
-
-Enter this into the form:
-
-```
-
+```jinja2
 {{7*7}}
-
 ```
 
-If the application is vulnerable, the output may evaluate the expression and display:
+Expected result:
 
-```
-
+```text
 49
-
 ```
 
-### Basic XSS Test
+---
 
-Enter this into the form:
+#### 2. Cross-Site Scripting (XSS)
 
-```
+User-controlled input is reflected back into the page without proper sanitization.
 
+Example payload:
+
+```html
 <script>alert('XSS')</script>
-
 ```
 
-If the application reflects input unsafely, the browser may execute the script.
+---
 
-### HTML Injection Test
+#### 3. Potential Remote Code Execution (RCE)
 
+Through SSTI exploitation, an attacker may gain access to Python objects and potentially execute arbitrary code.
+
+Example payloads:
+
+```jinja2
+{{config}}
 ```
 
-<h1>Hello from user input</h1>
-
+```jinja2
+{{''.__class__.__mro__[1].__subclasses__()}}
 ```
 
-This demonstrates how unescaped user input can affect page rendering.
-
-## Vulnerabilities Demonstrated
-
-### 1. Server-Side Template Injection
-
-Server-Side Template Injection happens when user-controlled input is inserted into a server-side template and rendered as template code.
-
-In Flask, unsafe use of `render_template_string()` can allow user input to be interpreted by the Jinja2 template engine.
-
-Example vulnerable pattern:
-
-```
-
-return render_template_string(template_with_user_input)
-
-```
-
-A safer approach is to avoid building templates directly from user input.
-
-### 2. Cross-Site Scripting
-
-Cross-Site Scripting happens when user input is rendered in a webpage without proper escaping or sanitization.
-
-Example dangerous behavior:
-
-```
-
-<p>User input appears here without safe handling</p>
-
-```
-
-An attacker could inject JavaScript into the page if input is not escaped correctly.
-
-### 3. Debug Mode Risk
-
-Running Flask with debug mode enabled can be dangerous in production.
-
-```
-
-[app.run](http://app.run)(debug=True)
-
-```
-
-Debug mode should only be used during local development.
-
-## Safer Coding Practices
-
-To prevent these issues in real applications:
-
-- Do not concatenate user input into templates
-- Do not use `render_template_string()` with untrusted input
-- Use normal template files with safe variable passing
-- Keep autoescaping enabled
-- Validate and sanitize user input
-- Disable debug mode in production
-- Use a Content Security Policy where appropriate
-- Never expose intentionally vulnerable apps to the public internet
-
-## Example Secure Pattern
-
-Instead of rendering user input as part of a template string, pass it safely as a variable:
-
-```
-
-from flask import Flask, request, render_template
-
-app = Flask(**name**)
-
-@app.route("/", methods=["GET", "POST"])
-
-def index():
-
-name = ""
-
-if request.method == "POST":
-
-name = request.form.get("name", "")
-
-return render_template("index.html", name=name)
-
-```
-
-And in the template:
-
-```
-
-<p>Hello, {{ name }}</p>
-
-```
-
-Jinja2 escapes variables by default in HTML templates, which helps prevent XSS.
-
-## requirements.txt
-
-```
-
-Flask
-
-```
+---
 
 ## Disclaimer
 
-This project is intentionally vulnerable and is provided for educational purposes only.
+This project intentionally contains insecure code.
 
-The author is not responsible for any misuse, damage, unauthorized access, or illegal activity caused by using this project.
+**You are solely responsible for how you use this software.**
 
-Use responsibly and only in environments where you have permission.
+Never:
+
+* Deploy to production
+* Expose to the public internet
+* Store sensitive information
+* Use in environments containing real data
+
+This repository exists strictly for:
+
+* Security education
+* Vulnerability research
+* Capture The Flag (CTF) practice
+* Penetration testing training
+* Secure coding demonstrations
+
+---
+
+## Installation
+
+### Prerequisites
+
+* Python 3.8+
+* pip
+
+### Clone Repository
+
+```bash
+git clone https://github.com/yourusername/vulnerable-flask-demo.git
+cd vulnerable-flask-demo
+```
+
+### Create Virtual Environment
+
+```bash
+python -m venv venv
+```
+
+Activate:
+
+**Linux/macOS**
+
+```bash
+source venv/bin/activate
+```
+
+**Windows**
+
+```powershell
+venv\Scripts\activate
+```
+
+### Install Dependencies
+
+```bash
+pip install flask
+```
+
+Or:
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Running the Application
+
+Start the server:
+
+```bash
+python app.py
+```
+
+The application will be available at:
+
+```text
+http://localhost:5000
+```
+
+Because the server is configured with:
+
+```python
+app.run(host='0.0.0.0', port=5000, debug=True)
+```
+
+it can also be accessed from other devices on the same network.
+
+---
+
+## Example Vulnerability Tests
+
+### SSTI
+
+Input:
+
+```jinja2
+{{7*7}}
+```
+
+Output:
+
+```text
+49
+```
+
+---
+
+### XSS
+
+Input:
+
+```html
+<img src=x onerror=alert('XSS')>
+```
+
+Result:
+
+```text
+JavaScript executes in the browser
+```
+
+---
+
+### Configuration Disclosure
+
+Input:
+
+```jinja2
+{{config}}
+```
+
+Result:
+
+```text
+Application configuration displayed
+```
+
+---
+
+## Learning Objectives
+
+By studying this project, you can learn:
+
+* How Jinja2 template injection works
+* Why `render_template_string()` can be dangerous
+* The risks of unsanitized user input
+* XSS attack vectors
+* Python object introspection techniques
+* Secure coding practices in Flask
+* Common web application attack chains
+
+---
+
+## Secure Coding Recommendations
+
+### Prevent SSTI
+
+Avoid rendering user-controlled data as template code.
+
+Unsafe:
+
+```python
+render_template_string(user_input)
+```
+
+Safer:
+
+```python
+render_template("index.html", name=user_input)
+```
+
+---
+
+### Prevent XSS
+
+Escape user input before rendering:
+
+```html
+{{ name }}
+```
+
+Use Flask/Jinja2 auto-escaping and avoid disabling it unless absolutely necessary.
+
+---
+
+### Disable Debug Mode
+
+Never run production systems with:
+
+```python
+debug=True
+```
+
+Instead:
+
+```python
+debug=False
+```
+
+---
+
+## Project Structure
+
+```text
+.
+├── app.py
+├── README.md
+└── requirements.txt
+```
+
+---
+
+## Educational Resources
+
+Topics worth researching:
+
+* OWASP Top 10
+* Server-Side Template Injection
+* Cross-Site Scripting (XSS)
+* Flask Security Best Practices
+* Jinja2 Template Security
+* Secure Input Validation
+* Content Security Policy (CSP)
+
+---
 
 ## License
 
-This project is released for educational use. You may modify and use it for learning, demonstrations, or security training labs.
-```
+This project is provided for educational purposes only.
+
+Use at your own risk.
+
+---
+
+## Author
+
+Created as a vulnerable-by-design Flask application to demonstrate common web security issues and secure coding lessons.
